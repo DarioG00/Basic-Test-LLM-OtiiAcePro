@@ -1,0 +1,15 @@
+{
+  "host": "192.168.121.175",
+  "username": "dario",
+  "password": "Tes1&2026",
+  "llama_bin": "./llama.cpp/build/bin/llama-cli",
+  "model_path": "./LLMs/gemma-2-2b-it-Q4_K_M.gguf",
+  "threads": 4,
+  "prompts": [
+    "Explain quantum mechanics in one sentence.",
+    "Write a haiku about Linux.",
+    "What is the capital of Japan?",
+    "Tell me a joke about programmers.",
+    "Summarize the theory of relativity."
+  ]
+}
