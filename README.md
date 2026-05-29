@@ -161,7 +161,7 @@ python LLM_inference_test.py
 - Lo script `LLM_inference_test.py` estrae automaticamente metriche di performance (TPS) dall'output di `llama.cpp`
 - Il timeout di default per la lettura dell'output remoto è di 120 secondi (modificabile nel codice)
 
-```
+---
 
 ## Uso
 
