@@ -1,53 +1,164 @@
 # BasicTestLLM
 
-Repository di test per eseguire inferenze con `llama.cpp` su un Raspberry Pi via SSH usando Python.
+Progetto di test per eseguire inferenze LLM con `llama.cpp` su un Raspberry Pi via SSH, con supporto per il monitoraggio energetico tramite Otii.
 
-## Struttura del progetto
+## 📋 Descrizione del Progetto
 
-- `LLM_inference_test.py` - script principale che si connette in SSH al Raspberry Pi, avvia `llama.cpp` in modalità interattiva e invia i prompt uno alla volta.
-- `config.json` - file di configurazione con parametri SSH e `llama.cpp`:
-  - `host`, `username`, `password`
-  - `llama_cpp_dir`, `llama_bin`, `model_path`, `threads`
-  - `prompts`
-- `otii_connection_test.py` - test di connessione TCP minimale a Otii Server.
+Questo repository contiene script Python per:
+1. Testare la connessione SSH a un Raspberry Pi
+2. Eseguire inferenze LLM usando `llama.cpp` in modalità interattiva via SSH
+3. Testare la connessione a un power monitor Otii per il monitoraggio dei consumi energetici
 
-## Requisiti
+---
 
-- Python 3.8+ (consigliato Python 3.10+)
-- `paramiko`
-- `json` (modulo standard)
+## 📁 Descrizione dei File
 
-## Installazione
+### `LLM_inference_test.py`
+Script principale che automatizza le inferenze LLM su un Raspberry Pi remoto.
 
-1. Crea e attiva un ambiente virtuale (opzionale ma consigliato):
+**Cosa fa:**
+- Si connette al Raspberry Pi via SSH usando le credenziali da `config.json`
+- Avvia `llama.cpp` in modalità interattiva
+- Invia una serie di prompt predefiniti al modello LLM
+- Cattura l'output dalla shell remota e ne estrae le metriche di performance:
+  - **Prompt TPS** (token per secondo durante l'elaborazione del prompt)
+  - **Generation TPS** (token per secondo durante la generazione del testo)
+- Legge l'output fino al prompt successivo (">") prima di inviare il prossimo comando
+- Gestisce timeout e errori di connessione
 
-```bash
-python -m venv env
-source env/bin/activate      # Linux/macOS
-env\Scripts\activate       # Windows
-```
+**Dipendenze:** paramiko, re, time, json
 
-2. Installa le dipendenze:
+---
 
-```bash
-python -m pip install -r requirements.txt
-```
+### `SSH_connection_test.py`
+Script di test minimale per verificare la connessione SSH al Raspberry Pi.
 
-## Configurazione
+**Cosa fa:**
+- Carica le credenziali SSH dal file `config.json`
+- Si connette al Raspberry Pi usando paramiko
+- Esegue un comando di verifica remoto (echo di test)
+- Stampa il risultato e chiude la connessione
 
-Modifica `config.json` con i valori corretti per la tua configurazione SSH e il percorso del modello:
+**Utilità:** Utile per validare che le credenziali SSH e la raggiungibilità della macchina remota sono corrette prima di eseguire inferenze complesse.
 
+**Dipendenze:** paramiko, json
+
+---
+
+### `otii_connection_test.py`
+Script di test per verificare la connessione a un Otii Server (power monitor).
+
+**Cosa fa:**
+- Importa il client TCP dell'Otii
+- Tenta di connettersi al server Otii
+- Gestisce gli errori di licenza (comune nel test iniziale)
+- Verifica se il dispositivo di monitoraggio energetico è raggiungibile
+
+**Utilità:** Consente di verificare che il dispositivo Otii sia operativo e accessibile prima di eseguire test di consumo energetico.
+
+**Dipendenze:** otii_tcp_client
+
+---
+
+### `config.json`
+File di configurazione centralizzato che contiene tutti i parametri necessari per SSH e `llama.cpp`.
+
+**Parametri:**
+- **`host`**: Indirizzo IP del Raspberry Pi (es. 192.168.121.175). **Nota:** L'indirizzo IP non è statico ma assegnato dinamicamente dalla rete locale (DHCP). Verificare l'indirizzo corrente del dispositivo prima di ogni connessione.
+- **`username`**: Nome utente SSH (es. dario)
+- **`password`**: Password SSH
+- **`llama_bin`**: Percorso relativo/assoluto dell'eseguibile llama-cli (es. `./llama.cpp/build/bin/llama-cli`)
+- **`model_path`**: Percorso al modello GGUF (es. `./LLMs/gemma-2-2b-it-Q4_K_M.gguf`)
+- **`threads`**: Numero di thread da usare per l'inferenza (es. 4)
+- **`prompts`**: Array di stringhe contenenti i prompt da testare
+
+**Formato:**
 ```json
 {
   "host": "192.168.121.175",
   "username": "dario",
-  "password": "Tes1&2026",
-  "llama_cpp_dir": "./llama.cpp",
-  "llama_bin": "./build/bin/llama-cli",
-  "model_path": "./LLMs/gemma-2-2b-it-Q4_K_M.gguf",
+  "password": "password",
+  "llama_bin": "./llama.cpp/build/bin/llama-cli",
+  "model_path": "./LLMs/model.gguf",
   "threads": 4,
   "prompts": [
     "Explain quantum mechanics in one sentence.",
+    "Write a haiku about Linux."
+  ]
+}
+```
+
+---
+
+### `requirements.txt`
+File che specifica tutte le dipendenze Python necessarie per eseguire gli script.
+
+**Pacchetti principali:**
+- **`paramiko`**: Client SSH per la connessione remota al Raspberry Pi
+- **`otii_tcp_client`**: Client TCP per la connessione al dispositivo Otii
+- **Dipendenze transitorie:** bcrypt, cffi, cryptography, pynacl (necessarie per paramiko)
+
+**Utilizzo:**
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 Installazione e Setup
+
+### 1. Ambiente Virtuale
+```bash
+python -m venv envTest
+source envTest/bin/activate      # Linux/macOS
+envTest\Scripts\activate          # Windows
+```
+
+### 2. Installare Dipendenze
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configurare `config.json`
+Modifica il file con i tuoi parametri:
+- IP e credenziali del Raspberry Pi
+- Percorsi di llama.cpp e del modello
+- I prompt da testare
+
+---
+
+## 🧪 Esecuzione degli Script
+
+### Test SSH (consigliato prima)
+```bash
+python SSH_connection_test.py
+```
+
+### Test Otii (se hai il dispositivo)
+```bash
+python otii_connection_test.py
+```
+
+### Esecuzione Inferenze LLM
+```bash
+python LLM_inference_test.py
+```
+
+---
+
+## ⚙️ Requisiti di Sistema
+
+- Python 3.8+ (consigliato 3.10+)
+- Accesso SSH a un Raspberry Pi con `llama.cpp` installato
+- (Opzionale) Dispositivo Otii per il monitoraggio energetico
+
+---
+
+## 📝 Note
+
+- I dati di configurazione sono centralizzati in `config.json` per facilitare le modifiche
+- Lo script `LLM_inference_test.py` estrae automaticamente metriche di performance (TPS) dall'output di `llama.cpp`
+- Il timeout di default per la lettura dell'output remoto è di 120 secondi (modificabile nel codice)
     "Write a haiku about Linux.",
     "What is the capital of Japan?"
   ]
