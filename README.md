@@ -1,12 +1,12 @@
 # BasicTestLLM
 
-Progetto di test per eseguire inferenze LLM con `llama.cpp` su un Raspberry Pi via SSH, con supporto per il monitoraggio energetico tramite Otii.
+Progetto di test per eseguire inferenze LLM con `llama.cpp` (versione b8989) su un Raspberry Pi via SSH, con supporto per il monitoraggio energetico tramite Otii.
 
 ## 📋 Descrizione del Progetto
 
 Questo repository contiene script Python per:
 1. Testare la connessione SSH a un Raspberry Pi
-2. Eseguire inferenze LLM usando `llama.cpp` in modalità interattiva via SSH
+2. Eseguire inferenze LLM usando `llama.cpp` via SSH
 3. Testare la connessione a un power monitor Otii per il monitoraggio dei consumi energetici
 
 ---
@@ -18,7 +18,7 @@ Script principale che automatizza le inferenze LLM su un Raspberry Pi remoto.
 
 **Cosa fa:**
 - Si connette al Raspberry Pi via SSH usando le credenziali da `config.json`
-- Avvia `llama.cpp` in modalità interattiva
+- Avvia `llama.cpp`
 - Invia una serie di prompt predefiniti al modello LLM
 - Cattura l'output dalla shell remota e ne estrae le metriche di performance:
   - **Prompt TPS** (token per secondo durante l'elaborazione del prompt)
@@ -64,8 +64,8 @@ Script di test per verificare la connessione a un Otii Server (power monitor).
 File di configurazione centralizzato che contiene tutti i parametri necessari per SSH e `llama.cpp`.
 
 **Parametri:**
-- **`host`**: Indirizzo IP del Raspberry Pi (es. 192.168.121.175). **Nota:** L'indirizzo IP non è statico ma assegnato dinamicamente dalla rete locale (DHCP). Verificare l'indirizzo corrente del dispositivo prima di ogni connessione.
-- **`username`**: Nome utente SSH (es. dario)
+- **`host`**: Indirizzo IP del Raspberry Pi (es. 192.168.x.y). **Nota:** L'indirizzo IP non è statico ma è quello assegnato dinamicamente dalla rete locale (DHCP). Verificare l'indirizzo corrente del dispositivo prima di ogni connessione.
+- **`username`**: Nome utente SSH (es. user, pi, dario, ...)
 - **`password`**: Password SSH
 - **`llama_bin`**: Percorso relativo/assoluto dell'eseguibile llama-cli (es. `./llama.cpp/build/bin/llama-cli`)
 - **`model_path`**: Percorso al modello GGUF (es. `./LLMs/gemma-2-2b-it-Q4_K_M.gguf`)
@@ -75,15 +75,16 @@ File di configurazione centralizzato che contiene tutti i parametri necessari pe
 **Formato:**
 ```json
 {
-  "host": "192.168.121.175",
-  "username": "dario",
+  "host": "192.168.x.y",
+  "username": "pi",
   "password": "password",
   "llama_bin": "./llama.cpp/build/bin/llama-cli",
   "model_path": "./LLMs/model.gguf",
   "threads": 4,
   "prompts": [
     "Explain quantum mechanics in one sentence.",
-    "Write a haiku about Linux."
+    "Write a haiku about Linux.",
+    "What is the capital of Japan?"
   ]
 }
 ```
@@ -109,7 +110,7 @@ pip install -r requirements.txt
 
 ### 1. Ambiente Virtuale
 ```bash
-python -m venv envTest
+uv venv envTest --python 3.13.2 --seed
 source envTest/bin/activate      # Linux/macOS
 envTest\Scripts\activate          # Windows
 ```
@@ -134,7 +135,7 @@ Modifica il file con i tuoi parametri:
 python SSH_connection_test.py
 ```
 
-### Test Otii (se hai il dispositivo)
+### Test Otii (se hai il dispositivo o almeno l'applicazione desktop Otii 3 con Otii TCP Server attivo)
 ```bash
 python otii_connection_test.py
 ```
@@ -148,8 +149,8 @@ python LLM_inference_test.py
 
 ## ⚙️ Requisiti di Sistema
 
-- Python 3.8+ (consigliato 3.10+)
-- Accesso SSH a un Raspberry Pi con `llama.cpp` installato
+- Python 3.13.2
+- Accesso SSH a un Raspberry Pi con `llama.cpp` (versione b8989) installato
 - (Opzionale) Dispositivo Otii per il monitoraggio energetico
 
 ---
@@ -159,10 +160,7 @@ python LLM_inference_test.py
 - I dati di configurazione sono centralizzati in `config.json` per facilitare le modifiche
 - Lo script `LLM_inference_test.py` estrae automaticamente metriche di performance (TPS) dall'output di `llama.cpp`
 - Il timeout di default per la lettura dell'output remoto è di 120 secondi (modificabile nel codice)
-    "Write a haiku about Linux.",
-    "What is the capital of Japan?"
-  ]
-}
+
 ```
 
 ## Uso
@@ -185,7 +183,3 @@ Lo script:
 
 - Se il prompt `>` non viene rilevato entro il timeout, lo script prosegue comunque.
 - `config.json` contiene dati sensibili: evita di committarlo su repository pubblici.
-
-## Commit suggerito
-
-`aggiorna README con istruzioni coerenti per LLM_inference_test e configurazione JSON`
