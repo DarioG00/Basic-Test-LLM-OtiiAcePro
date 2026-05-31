@@ -1,94 +1,110 @@
-#!/usr/bin/env python3
-
 import time
 from otii_tcp_client import otii_client
 
-MEASUREMENT_DURATION = 5.0
-NUM_RECORDINGS = 5
+BOOT_DURATION = 30.0
+
+RASPBERRY_VOLTAGE = 5.1
+CURRENT_LIMIT = 4.5
 
 class AppException(Exception):
-    pass
+    '''Application Exception'''
+
+def basic_measurement(otii: otii_client.Connect) -> None:
+    '''
+    This example shows you how to configure and
+    start a recording of the main current channel.
+    '''
+
+    # -------------------------------------------------
+    # Configure the device and prepare for recording
+    # -------------------------------------------------
+
+    # Get a reference to a Arc device
+    devices = otii.get_devices()
+    if len(devices) == 0:
+        raise AppException('No Arc are connected!')
+    device = devices[0]
+
+    # Get the active project
+    project = otii.get_active_project()
+
+    # Configure the device
+    device.set_main_voltage(RASPBERRY_VOLTAGE)
+    device.set_max_current(CURRENT_LIMIT)
+
+    # Enable the main current channel
+    device.enable_channel('mc', True)
 
 
-def run_measurement(otii, device, project, index):
 
-    print(f'\n=== Recording {index + 1} ===')
+    # -------------------------------------------------
+    # Perform the recording and get statistics
+    # -------------------------------------------------
 
-    # Avvia recording
-    project.start_recording()
-
-    # Accende DUT
+    # Turn on the main output of the selected device
     device.set_main(True)
 
-    # Attende
-    time.sleep(MEASUREMENT_DURATION)
+    # Wait for boot and stabilization
+    time.sleep(BOOT_DURATION)
 
-    # Spegne DUT
-    device.set_main(False)
+    # launching the model and wait for it to finish
+    # ...
 
-    # Stop recording
+    # Start a recording
+    project.start_recording()
+
+    # Performing LLM inferences
+    # ...
+
+    # Stop the recording
     project.stop_recording()
 
-    # Recupera ultima registrazione
+    # Turn off the main output of the selected device
+    device.set_main(False)
+
+
+    # Get statistics for the recording
     recording = project.get_last_recording()
+    assert recording is not None
 
-    if recording is None:
-        raise AppException('Recording non trovata')
+    print('Recording info')
+    print('==============')
+    print(f'Name:        {recording.name}')
+    print(f'Start time:  {recording.start_time}')
+    print('Measurements:')
+    if recording.measurements is not None:
+        for measurement in recording.measurements:
+            print('    ', end='')
+            print(f'Device: {measurement["device_id"]}', end='')
+            print(f', {measurement["channel"]}', end='')
+            if 'sample_rate' in measurement:
+                print(f', sample rate: {measurement["sample_rate"]}', end='')
+            print('')
+    print('')
 
-    # Statistiche canale corrente main
     info = recording.get_channel_info(device.id, 'mc')
+    statistics = recording.get_channel_statistics(device.id, 'mc', info['from'], info['to'])
 
-    stats = recording.get_channel_statistics(
-        device.id,
-        'mc',
-        info['from'],
-        info['to']
-    )
+    # Print the statistics
+    print('Statistics')
+    print('==========')
+    print(f'From:        {info["from"]} s')
+    print(f'To:          {info["to"]} s')
+    print(f'Offset:      {info["offset"]} s')
+    print(f'Sample rate: {info["sample_rate"]}')
+    print('')
 
-    print(f'Nome:     {recording.name}')
-    print(f'Average:  {stats["average"]:.6f} A')
-    print(f'Min:      {stats["min"]:.6f} A')
-    print(f'Max:      {stats["max"]:.6f} A')
-    print(f'Energy:   {stats["energy"] / 3600:.6f} Wh')
-    print(f'Charge:   {stats["charge"] / 3600:.6f} Ah')
+    print(f'Min:         {statistics["min"]:.5} A')
+    print(f'Max:         {statistics["max"]:.5} A')
+    print(f'Average:     {statistics["average"]:.5} A')
+    print(f'Energy:      {statistics["energy"] / 3600:.5} Wh')
+    print(f'Charge:      {statistics["charge"] / 3600:.5} Ah')
 
-
-def main():
-
+def main() -> None:
+    '''Connect to the Otii 3 application and run the measurement'''
     client = otii_client.OtiiClient()
-
     with client.connect() as otii:
-
-        devices = otii.get_devices()
-
-        if not devices:
-            raise AppException('Nessun device trovato')
-
-        device = devices[0]
-
-        # Configurazione device
-        device.set_main_voltage(3.7)
-        device.set_exp_voltage(3.3)
-        device.set_max_current(0.5)
-
-        # Enable main current
-        device.enable_channel('mc', True)
-
-        project = otii.get_active_project()
-
-        # Esegue 5 recording
-        for i in range(NUM_RECORDINGS):
-
-            run_measurement(
-                otii,
-                device,
-                project,
-                i
-            )
-
-            # pausa opzionale tra recording
-            time.sleep(1)
-
+        basic_measurement(otii)
 
 if __name__ == '__main__':
     main()
