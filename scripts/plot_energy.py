@@ -1,6 +1,6 @@
 """
 Semplice script per leggere consumi energetici di inferenze LLM da CSV
-e produrre alcuni grafici con pandas + matplotlib.
+e produrre alcuni grafici con seaborn.
 
 Uso:
   python scripts/plot_energy.py
@@ -10,6 +10,7 @@ stampa un messaggio d'errore. Salva i plot in recordings/plots/.
 """
 from pathlib import Path
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 
@@ -25,10 +26,11 @@ def main():
         return
 
     df = pd.read_csv(csv_path, parse_dates=["timestamp"]) 
+    sns.set_theme(style="darkgrid")
 
-    # Grafico 1: energia (joules) nel tempo
+    # Grafico 1: energia (joules) nel tempo con seaborn lineplot
     plt.figure(figsize=(10, 4))
-    plt.plot(df["timestamp"], df["energy_joules"], marker="o", linestyle="-")
+    sns.lineplot(x="timestamp", y="energy_joules", data=df, marker="o")
     plt.xlabel("Timestamp")
     plt.ylabel("Energy (J)")
     plt.title("Energy per inference over time")
@@ -36,9 +38,9 @@ def main():
     plt.savefig(out_dir / "energy_time_series.png")
     plt.close()
 
-    # Grafico 2: histogram energia
+    # Grafico 2: histogram energia con seaborn
     plt.figure(figsize=(6, 4))
-    plt.hist(df["energy_joules"], bins=12)
+    sns.histplot(data=df, x="energy_joules", bins=12, kde=True)
     plt.xlabel("Energy (J)")
     plt.ylabel("Count")
     plt.title("Energy distribution")
@@ -48,18 +50,17 @@ def main():
 
     # Grafico 3: boxplot per modello
     plt.figure(figsize=(6, 4))
-    df.boxplot(column="energy_joules", by="model")
+    sns.boxplot(data=df, x="model", y="energy_joules")
     plt.xlabel("Model")
     plt.ylabel("Energy (J)")
     plt.title("Energy by model")
-    plt.suptitle("")
     plt.tight_layout()
     plt.savefig(out_dir / "energy_by_model.png")
     plt.close()
 
-    # Grafico 4: scatter duration vs energy
+    # Grafico 4: scatter duration vs energy con regressione
     plt.figure(figsize=(6, 4))
-    plt.scatter(df["duration_ms"], df["energy_joules"], alpha=0.7)
+    sns.scatterplot(data=df, x="duration_ms", y="energy_joules", hue="model", s=100, alpha=0.7)
     plt.xlabel("Duration (ms)")
     plt.ylabel("Energy (J)")
     plt.title("Duration vs Energy")
