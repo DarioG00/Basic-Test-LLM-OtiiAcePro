@@ -11,98 +11,45 @@ Questo repository contiene script Python per:
 
 ---
 
-## 📁 Descrizione dei File
+## 📁 Struttura del repository
 
-### `LLM_inference_test.py`
-Script principale che automatizza le inferenze LLM su un Raspberry Pi remoto.
+Questo progetto è organizzato in cartelle e file principali, ciascuno con uno scopo diverso.
 
-**Cosa fa:**
-- Si connette al Raspberry Pi via SSH usando le credenziali da `config.json`
-- Avvia `llama.cpp`
-- Invia una serie di prompt predefiniti al modello LLM
-- Cattura l'output dalla shell remota e ne estrae le metriche di performance:
-  - **Prompt TPS** (token per secondo durante l'elaborazione del prompt)
-  - **Generation TPS** (token per secondo durante la generazione del testo)
-- Legge l'output fino al prompt successivo (">") prima di inviare il prossimo comando
-- Gestisce timeout e errori di connessione
+### Sommario file e cartelle
+| Percorso | Tipo | Descrizione |
+|---|---|---|
+| `README.md` | File | Documentazione del repository |
+| `config.json` | File | Configurazione SSH, `llama.cpp`, modello e prompt |
+| `requirements.txt` | File | Dipendenze Python necessarie |
+| `envTest/` | Cartella | Ambiente virtuale Python con pacchetti installati |
+| `recordings/` | Cartella | Dati e grafici dei test energetici |
+| `scripts/` | Cartella | Script Python per test e inferenze |
 
-**Dipendenze:** paramiko, re, time, json
+### Dettaglio `scripts/`
+| File | Descrizione |
+|---|---|
+| `LLM_inference_test.py` | Script principale per eseguire inferenze LLM su un Raspberry Pi remoto tramite SSH. Avvia `llama.cpp`, invia prompt e raccoglie metriche. |
+| `SSH_connection_test.py` | Test minimale per convalidare la connessione SSH e verificare la raggiungibilità della macchina remota. |
+| `otii_connection_test.py` | Test di connessione al server Otii TCP per validare il monitoraggio energetico. |
+| `power_measurements_test.py` | Script di supporto per le misurazioni di potenza e la gestione dei dati Otii. |
+| `plot_energy.py` | Genera grafici dai dati energetici contenuti in `recordings/llm_energy_test.csv`. |
 
----
+### Dettaglio `recordings/`
+| Percorso | Descrizione |
+|---|---|
+| `llm_energy_test.csv` | File CSV con le misurazioni energetiche raccolte durante i test LLM. |
+| `plots/` | Cartella contenente grafici generati dai dati di consumo energetico. |
+| `plots/duration_vs_energy.png` | Grafico rapporto durata/energia. |
+| `plots/energy_by_model.png` | Grafico energia per modello. |
+| `plots/energy_histogram.png` | Istogramma dei consumi energetici. |
+| `plots/energy_time_series.png` | Serie temporale delle misure energetiche. |
 
-### `SSH_connection_test.py`
-Script di test minimale per verificare la connessione SSH al Raspberry Pi.
-
-**Cosa fa:**
-- Carica le credenziali SSH dal file `config.json`
-- Si connette al Raspberry Pi usando paramiko
-- Esegue un comando di verifica remoto (echo di test)
-- Stampa il risultato e chiude la connessione
-
-**Utilità:** Utile per validare che le credenziali SSH e la raggiungibilità della macchina remota sono corrette prima di eseguire inferenze complesse.
-
-**Dipendenze:** paramiko, json
-
----
-
-### `otii_connection_test.py`
-Script di test per verificare la connessione a un Otii Server (power monitor).
-
-**Cosa fa:**
-- Importa il client TCP dell'Otii
-- Tenta di connettersi al server Otii
-- Gestisce gli errori di licenza (comune nel test iniziale)
-- Verifica se il dispositivo di monitoraggio energetico è raggiungibile
-
-**Utilità:** Consente di verificare che il dispositivo Otii sia operativo e accessibile prima di eseguire test di consumo energetico.
-
-**Dipendenze:** otii_tcp_client
-
----
-
-### `config.json`
-File di configurazione centralizzato che contiene tutti i parametri necessari per SSH e `llama.cpp`.
-
-**Parametri:**
-- **`host`**: Indirizzo IP del Raspberry Pi (es. 192.168.x.y). **Nota:** L'indirizzo IP non è statico ma è quello assegnato dinamicamente dalla rete locale (DHCP). Verificare l'indirizzo corrente del dispositivo prima di ogni connessione.
-- **`username`**: Nome utente SSH (es. user, pi, dario, ...)
-- **`password`**: Password SSH
-- **`llama_bin`**: Percorso relativo/assoluto dell'eseguibile llama-cli (es. `./llama.cpp/build/bin/llama-cli`)
-- **`model_path`**: Percorso al modello GGUF (es. `./LLMs/gemma-2-2b-it-Q4_K_M.gguf`)
-- **`threads`**: Numero di thread da usare per l'inferenza (es. 4)
-- **`prompts`**: Array di stringhe contenenti i prompt da testare
-
-**Formato:**
-```json
-{
-  "host": "192.168.x.y",
-  "username": "pi",
-  "password": "password",
-  "llama_bin": "./llama.cpp/build/bin/llama-cli",
-  "model_path": "./LLMs/model.gguf",
-  "threads": 4,
-  "prompts": [
-    "Explain quantum mechanics in one sentence.",
-    "Write a haiku about Linux.",
-    "What is the capital of Japan?"
-  ]
-}
-```
-
----
-
-### `requirements.txt`
-File che specifica tutte le dipendenze Python necessarie per eseguire gli script.
-
-**Pacchetti principali:**
-- **`paramiko`**: Client SSH per la connessione remota al Raspberry Pi
-- **`otii_tcp_client`**: Client TCP per la connessione al dispositivo Otii
-- **Dipendenze transitorie:** bcrypt, cffi, cryptography, pynacl (necessarie per paramiko)
-
-**Utilizzo:**
-```bash
-pip install -r requirements.txt
-```
+### Dettaglio `envTest/`
+| Elemento | Descrizione |
+|---|---|
+| `Lib/` | Pacchetti Python installati nell'ambiente virtuale. |
+| `Scripts/` | Script di attivazione dell'ambiente virtuale per Windows. |
+| `pyvenv.cfg` | Configurazione dell'ambiente virtuale. |
 
 ---
 
@@ -110,9 +57,10 @@ pip install -r requirements.txt
 
 ### 1. Ambiente Virtuale
 ```bash
-uv venv envTest --python 3.13.2 --seed
-source envTest/bin/activate      # Linux/macOS
-envTest\Scripts\activate          # Windows
+python -m venv envTest
+envTest\Scripts\activate      # Windows
+# oppure per Linux/macOS:
+# source envTest/bin/activate
 ```
 
 ### 2. Installare Dipendenze
@@ -123,8 +71,19 @@ pip install -r requirements.txt
 ### 3. Configurare `config.json`
 Modifica il file con i tuoi parametri:
 - IP e credenziali del Raspberry Pi
-- Percorsi di llama.cpp e del modello
+- Percorsi di `llama.cpp` e del modello
 - I prompt da testare
+
+#### Esempio di parametri di `config.json`
+| Chiave | Descrizione | Esempio |
+|---|---|---|
+| `host` | Indirizzo IP del Raspberry Pi | `192.168.0.10` |
+| `username` | Nome utente SSH | `pi` |
+| `password` | Password SSH | `password` |
+| `llama_bin` | Percorso dell'eseguibile `llama-cli` | `./llama.cpp/build/bin/llama-cli` |
+| `model_path` | Percorso del file di modello GGUF | `./LLMs/model.gguf` |
+| `threads` | Numero di thread per l'inferenza | `4` |
+| `prompts` | Array di prompt da inviare al modello | `[...]` |
 
 ---
 
@@ -132,24 +91,29 @@ Modifica il file con i tuoi parametri:
 
 ### Test SSH (consigliato prima)
 ```bash
-python SSH_connection_test.py
+python scripts\SSH_connection_test.py
 ```
 
 ### Test Otii (se hai il dispositivo o almeno l'applicazione desktop Otii 3 con Otii TCP Server attivo)
 ```bash
-python otii_connection_test.py
+python scripts\otii_connection_test.py
 ```
 
 ### Esecuzione Inferenze LLM
 ```bash
-python LLM_inference_test.py
+python scripts\LLM_inference_test.py
+```
+
+### Genera grafici energetici
+```bash
+python scripts\plot_energy.py
 ```
 
 ---
 
 ## ⚙️ Requisiti di Sistema
 
-- Python 3.13.2
+- Python 3.x
 - Accesso SSH a un Raspberry Pi con `llama.cpp` (versione b8989) installato
 - (Opzionale) Dispositivo Otii per il monitoraggio energetico
 
@@ -157,9 +121,10 @@ python LLM_inference_test.py
 
 ## 📝 Note
 
-- I dati di configurazione sono centralizzati in `config.json` per facilitare le modifiche
-- Lo script `LLM_inference_test.py` estrae automaticamente metriche di performance (TPS) dall'output di `llama.cpp`
-- Il timeout di default per la lettura dell'output remoto è di 120 secondi (modificabile nel codice)
+- I dati di configurazione sono centralizzati in `config.json` per facilitare le modifiche.
+- Lo script `LLM_inference_test.py` estrae metriche di performance (TPS) dall'output di `llama.cpp`.
+- Il timeout di default per la lettura dell'output remoto è di 120 secondi (modificabile nel codice).
+- `envTest/` contiene l'ambiente virtuale; non è necessario committare nuovamente la cartella se modifichi solo il codice.
 
 ---
 
@@ -168,7 +133,7 @@ python LLM_inference_test.py
 Esegui lo script principale:
 
 ```bash
-python LLM_inference_test.py
+python scripts\LLM_inference_test.py
 ```
 
 Lo script:
