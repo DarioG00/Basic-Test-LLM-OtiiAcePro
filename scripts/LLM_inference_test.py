@@ -15,7 +15,7 @@ USERNAME = config["username"]
 PASSWORD = config["password"]
 
 LLAMA_BIN = config["llama_bin"]
-MODEL_PATH = config["model_path"]
+MODEL_PATH = config["model_paths"]
 PROMPTS = config["prompts"]
 THREADS = config["threads"]
 
@@ -28,10 +28,10 @@ def build_command():
 
     cmd = f"""
     {LLAMA_BIN} \
-        -m {MODEL_PATH} \
+        -m {MODEL_PATH[0]} \
         -c 512 \
         -n 128 \
-        -t {THREADS}
+        -t {THREADS[2]}
     """
 
     return cmd
