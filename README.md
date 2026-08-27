@@ -6,6 +6,8 @@ Progetto di test per eseguire inferenze LLM con `llama.cpp` (versione b8989) su 
 
 I miei test di misurazione con Otii Ace Pro fallivano in quanto utilizzavo un cavo di alimentazione del Pi5 fatto a mano che univa i connettori a banana (lato Otii Ace Pro) con la parte di un cavo con connettore USB-C (quello di alimentazione del Pi5, appunto). Il cavo deve essere ufficiale perché all'accensione del Pi5, viene fatto un controllo automatico dei pin del connettore USB-C e se nota che manca il pin CC (Current Control) si spegne per protezione.
 
+I grafici presenti nella cartella recordings sono una bufala. Sono valori energetici random di test di esecuzione degli script python.
+
 ## 📋 Descrizione del Progetto
 
 Questo repository contiene script Python per:
